@@ -1,0 +1,243 @@
+Dokumenten-KI Pipeline – Systemkonzept
+
+Version: 1.0 Zweck: Automatisierte Verarbeitung, Analyse und
+Archivierung von gescannten oder importierten Dokumenten. Umgebung:
+Lokales Heimnetz mit NAS + Workbots (Dell Precision T3610) +
+Hauptrechner.
+
+  ----------------------
+  1. ZIEL DER PIPELINE
+  ----------------------
+
+Die Pipeline verarbeitet automatisch eingehende Dokumente (Scans oder
+manuell abgelegte Dateien), führt OCR und Textanalyse durch und
+archiviert die Dokumente mit sinnvoller Benennung.
+
+Automatischer Ablauf:
+
+Scanner / Datei │ ▼ Input-Ordner (NAS) │ ▼ Workbot verarbeitet Dokument
+│ ├ OCR ├ Textanalyse ├ Dokumenttyp bestimmen ├ Datum aus Dokument
+erkennen ├ Dateiname generieren └ Archivieren │ ▼ Archivstruktur
+
+Ziele:
+
+-   automatische Umbenennung der Dokumente
+-   automatische Sortierung
+-   Volltextsuche möglich
+-   spätere KI-Auswertung (RAG-System)
+-   komplett lokal ohne Cloud
+
+  ---------------------
+  2. HARDWARESTRUKTUR
+  ---------------------
+
+Scanner → Netzwerkordner auf NAS NAS → zentrale Ablage Workbot →
+verarbeitet Dokumente Hauptrechner → Nutzung und Zugriff
+
+Netzwerkstruktur (vereinfacht):
+
+Scanner │ ▼ NAS │ ├ Inputordner │ ▼ Workbot │ ▼ Archivordner
+
+  -------------------
+  3. ORDNERSTRUKTUR
+  -------------------
+
+Empfohlene Struktur auf dem NAS:
+
+N:_pipeline
+
+    input_scanner
+        → automatische Scans vom Scanner
+
+    input_manual
+        → manuell abgelegte Dokumente
+
+    processing
+        → temporäre Verarbeitung
+
+    review
+        → Dokumente mit unsicherer Klassifizierung
+
+    input_error
+        → technische Fehler (OCR / PDF beschädigt)
+
+    archiv
+        → endgültige Ablage
+
+Beispiel Archivstruktur:
+
+archiv
+
+    Rechnungen
+    Versicherung
+    Steuer
+    Arbeit
+    Verträge
+    Sonstiges
+
+  ---------------------
+  4. DATEINAMENSCHEMA
+  ---------------------
+
+Format:
+
+YYYY-MM-DD_TYP_THEMA.pdf
+
+Beispiele:
+
+2025-02-18_Rechnung_Strom.pdf 2024-11-03_Versicherung_Haftpflicht.pdf
+2025-01-31_Lohnabrechnung_Firma.pdf
+
+Wenn nur Monat erkannt wird:
+
+2025-02_Lohnabrechnung_Firma.pdf
+
+Unsicherer Fall:
+
+UNSICHER_Rechnung_scan_001.pdf
+
+  --------------------------
+  5. OCR UND TEXTERKENNUNG
+  --------------------------
+
+Pipeline-Schritte:
+
+1.  Dokument erkennen
+2.  PDF/Text extrahieren
+3.  Falls Scan → OCR durchführen
+4.  Volltext erzeugen
+5.  Textanalyse starten
+
+Typische Software:
+
+-   Tesseract OCR
+-   PaddleOCR
+-   PyMuPDF
+-   LayoutParser (optional)
+
+  -------------------------------
+  6. ERKENNUNG DES DOKUMENTTYPS
+  -------------------------------
+
+Der Dokumenttyp wird über Schlüsselwörter im Text erkannt.
+
+Beispiele:
+
+Rechnung → Rechnungen Versicherung → Versicherung Finanzamt → Steuer
+Lohnabrechnung → Arbeit
+
+Beispiel Logik:
+
+if “versicherung” im text: typ = “Versicherung”
+
+  --------------------------------
+  7. DATUMSERKENNUNG IM DOKUMENT
+  --------------------------------
+
+Das Datum wird aus dem Dokumentinhalt extrahiert (nicht Dateidatum).
+
+Mehrstufige Datumslogik:
+
+Stufe 1 – explizites Dokumentdatum
+
+Suche nach Begriffen:
+
+-   Rechnungsdatum
+-   Datum
+-   Ausstellungsdatum
+-   Bescheiddatum
+-   Schreiben vom
+-   Vertragsdatum
+
+Beispiel:
+
+Rechnungsdatum: 18.02.2021
+
+Stufe 2 – dokumenttypabhängig
+
+Rechnung → Rechnungsdatum Lohnabrechnung → Abrechnungsmonat Versicherung
+→ Schreiben vom Bescheid → Bescheiddatum
+
+Stufe 3 – allgemeine Datumsanalyse
+
+Falls kein Feld erkannt wird: alle Datumsangaben im Dokument
+analysieren.
+
+Formate:
+
+18.02.2021 18-02-2021 2021-02-18 18/02/2021 18 Februar 2021
+
+Stufe 4 – Unsicherheit
+
+Wenn kein plausibles Datum gefunden wird:
+
+→ Dokument in Ordner “review”
+
+  -----------------------------------
+  8. DATUMSBEWERTUNG (SCORE-SYSTEM)
+  -----------------------------------
+
+Jedes erkannte Datum erhält eine Gewichtung.
+
+Beispiel:
+
+Rechnungsdatum → 100 Punkte Ausstellungsdatum → 90 Datum im Briefkopf →
+70 Fälligkeitsdatum → 30 Geburtsdatum → 10
+
+Das Datum mit dem höchsten Score wird verwendet.
+
+  ---------------------
+  9. FEHLERBEHANDLUNG
+  ---------------------
+
+review
+
+→ Dokument technisch lesbar → Datum oder Kategorie unsicher
+
+input_error
+
+→ OCR fehlgeschlagen → PDF beschädigt → Datei unlesbar
+
+  ------------------------------
+  10. PERFORMANCE DER WORKBOTS
+  ------------------------------
+
+Hardware:
+
+Dell Precision T3610 32 GB RAM Xeon CPU SSD
+
+Leistung:
+
+OCR pro Seite: ca. 0.3 – 0.8 Sekunden
+
+100 Seiten PDF: ca. 40 – 60 Sekunden
+
+  ------------------------------
+  11. ZUKÜNFTIGE ERWEITERUNGEN
+  ------------------------------
+
+Später mögliche Erweiterungen:
+
+-   automatische Tags
+-   Volltextsuche
+-   Dokumenten-KI
+-   Wissensdatenbank (RAG)
+
+Pipeline-Erweiterung:
+
+Dokument │ ▼ OCR │ ▼ Text-Chunks │ ▼ Embeddings │ ▼ Vector-Datenbank
+
+Dann mögliche KI-Abfragen:
+
+“Welche Versicherungen habe ich?” “Wann wurde mein Internetvertrag
+abgeschlossen?”
+
+  ----------------------
+  12. ZIEL DES SYSTEMS
+  ----------------------
+
+-   automatische Dokumentenorganisation
+-   langfristiges Archiv
+-   vollständige Durchsuchbarkeit
+-   Vorbereitung für lokale KI-Systeme
+-   vollständig lokal und datenschutzfreundlich
