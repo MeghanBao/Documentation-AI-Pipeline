@@ -2,6 +2,7 @@
 import logging
 import shutil
 from pathlib import Path
+from typing import Optional
 
 from .archiver import archive_document
 from .classifier import classify
@@ -12,7 +13,7 @@ from .ocr import extract_text
 logger = logging.getLogger(__name__)
 
 
-def process_document(file_path: Path, config: PipelineConfig) -> None:
+def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
     """
     Process a single document through the full pipeline.
 
@@ -23,6 +24,7 @@ def process_document(file_path: Path, config: PipelineConfig) -> None:
       4. Extract document date (4-stage scoring)
       5. Build filename and move to archive/ or review/
 
+    Returns the final destination Path on success, or None on hard failure.
     On OCR failure the file is moved to input_error/.
     Uncertain classification or missing date → review/ with UNSICHER_ prefix.
     """
@@ -32,7 +34,7 @@ def process_document(file_path: Path, config: PipelineConfig) -> None:
         shutil.move(str(file_path), str(processing_path))
     except OSError as exc:
         logger.error("Cannot move %s to processing: %s", file_path.name, exc)
-        return
+        return None
 
     logger.info("Processing: %s", processing_path.name)
 
@@ -46,7 +48,7 @@ def process_document(file_path: Path, config: PipelineConfig) -> None:
     except Exception as exc:
         logger.error("OCR failed for %s: %s", processing_path.name, exc)
         _move_to_error(processing_path, config.input_error)
-        return
+        return None
 
     # --- Step 2: Classify ---
     classification = classify(text, fallback_stem=file_path.stem)
@@ -68,9 +70,11 @@ def process_document(file_path: Path, config: PipelineConfig) -> None:
             review_dir=config.review,
         )
         logger.info("Done: %s", dest.name)
+        return dest
     except Exception as exc:
         logger.error("Archiving failed for %s: %s", processing_path.name, exc)
         _move_to_error(processing_path, config.input_error)
+        return None
 
 
 def _move_to_error(src: Path, error_dir: Path) -> None:

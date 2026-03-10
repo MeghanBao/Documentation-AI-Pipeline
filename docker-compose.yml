@@ -1,0 +1,22 @@
+services:
+
+  # Web UI — drag-and-drop upload + archive browser
+  ui:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data/_pipeline:/pipeline
+    environment:
+      - PIPELINE_BASE_DIR=/pipeline
+    restart: unless-stopped
+
+  # Background watcher — monitors input_scanner/ and input_manual/ automatically
+  watcher:
+    build: .
+    volumes:
+      - ./data/_pipeline:/pipeline
+    environment:
+      - PIPELINE_BASE_DIR=/pipeline
+    command: ["python", "-m", "doc_pipeline", "--base-dir", "/pipeline"]
+    restart: unless-stopped

@@ -57,6 +57,7 @@ src/doc_pipeline/
 | `pipeline.py` | Moves file to `processing/`, calls each module in sequence, handles errors per step. |
 | `watcher.py` | Watchdog-based observer. Polls file size until stable before triggering `process_document()`. |
 | `main.py` | CLI with `--process FILE` (single-file mode) and default watch mode. |
+| `ui.py` | Streamlit web UI: drag-and-drop upload, archive browser, settings view. |
 
 ### Date Extraction — 4-Stage Scoring
 
@@ -107,7 +108,49 @@ N:\_pipeline\
     └── Sonstiges\
 ```
 
-### Installation
+### Quick Start (Docker — recommended)
+
+The easiest way to run the pipeline. No Python or Tesseract installation needed.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+**Windows — one double-click:**
+
+```
+start.bat
+```
+
+**All platforms:**
+
+```bash
+git clone https://github.com/MeghanBao/Documentation-AI-Pipeline.git
+cd Documentation-AI-Pipeline
+
+docker compose up --build -d
+# open http://localhost:8501
+```
+
+On first run Docker builds the image (≈ 2–5 min). Subsequent starts take a few seconds.
+Pipeline data is stored in `./data/_pipeline/` on the host.
+
+### Web UI
+
+The Streamlit interface is available at **http://localhost:8501** after starting with Docker.
+
+| Tab | Function |
+|---|---|
+| 📤 Hochladen & Verarbeiten | Drag-and-drop file upload; results shown immediately |
+| 📁 Archiv | Browse archived documents by category; refresh button |
+| ⚙️ Einstellungen | View configured folder paths and their status |
+
+To run the UI without Docker:
+
+```bash
+pip install -e .
+streamlit run src/doc_pipeline/ui.py
+```
+
+### Installation (manual / without Docker)
 
 **Prerequisites**
 
@@ -135,7 +178,7 @@ cd Documentation-AI-Pipeline
 pip install -e .
 ```
 
-### Usage
+### Usage (CLI)
 
 ```bash
 # Continuous watch mode (default)
@@ -242,6 +285,7 @@ src/doc_pipeline/
 | `pipeline.py` | Verschiebt Datei nach `processing/`, ruft alle Module nacheinander auf, behandelt Fehler je Schritt. |
 | `watcher.py` | watchdog-basierter Observer. Prüft Dateigröße auf Stabilität, bevor `process_document()` ausgelöst wird. |
 | `main.py` | CLI mit `--process FILE` (Einzeldatei-Modus) und Standard-Watch-Modus. |
+| `ui.py` | Streamlit-Web-Oberfläche: Drag-and-Drop-Upload, Archiv-Browser, Einstellungen. |
 
 ### Datumserkennung — 4-stufiges Score-System
 
@@ -292,7 +336,51 @@ N:\_pipeline\
     └── Sonstiges\
 ```
 
-### Installation
+### Schnellstart (Docker — empfohlen)
+
+Die einfachste Variante. Kein Python, keine Tesseract-Installation notwendig.
+
+**Voraussetzung:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+**Windows — ein Doppelklick:**
+
+```
+start.bat
+```
+
+**Alle Plattformen:**
+
+```bash
+git clone https://github.com/MeghanBao/Documentation-AI-Pipeline.git
+cd Documentation-AI-Pipeline
+
+docker compose up --build -d
+# Browser öffnen: http://localhost:8501
+```
+
+Beim ersten Start wird das Image gebaut (≈ 2–5 Min.). Danach startet die Pipeline in Sekunden.
+Die Dokumentendaten liegen in `./data/_pipeline/` auf dem Host-Rechner.
+
+### Web-Oberfläche
+
+Die Streamlit-Oberfläche ist nach dem Docker-Start erreichbar unter **http://localhost:8501**.
+
+| Tab | Funktion |
+|---|---|
+| 📤 Hochladen & Verarbeiten | Drag-and-Drop-Upload; Ergebnis wird sofort angezeigt |
+| 📁 Archiv | Archivierte Dokumente nach Kategorie; Aktualisieren-Schaltfläche |
+| ⚙️ Einstellungen | Konfigurierte Ordnerpfade und deren Status |
+
+Ohne Docker:
+
+```bash
+pip install -e .
+streamlit run src/doc_pipeline/ui.py
+```
+
+> **Ausführliche Bedienungsanleitung für Nicht-Techniker:** siehe [`USAGE.md`](USAGE.md)
+
+### Installation (manuell / ohne Docker)
 
 **Voraussetzungen**
 
@@ -320,7 +408,7 @@ cd Documentation-AI-Pipeline
 pip install -e .
 ```
 
-### Verwendung
+### Verwendung (CLI)
 
 ```bash
 # Kontinuierlicher Watch-Modus (Standard)
