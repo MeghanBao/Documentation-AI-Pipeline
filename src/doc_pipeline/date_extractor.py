@@ -26,8 +26,12 @@ _RE_ISO        = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 _RE_DMY_DASH   = re.compile(r"\b(\d{2})-(\d{2})-(\d{4})\b")
 _RE_DMY_SLASH  = re.compile(r"\b(\d{2})/(\d{2})/(\d{4})\b")
 _RE_MONTH_YEAR = re.compile(r"\b(\d{1,2})\.(\d{4})\b")           # month-only: 02.2025
-_RE_MONTH_NAME = re.compile(
+_RE_MONTH_NAME = re.compile(                                       # day + name + year
     r"\b(\d{1,2})\s+(" + "|".join(_MONTH_NAMES_DE) + r")\s+(\d{4})\b",
+    re.IGNORECASE,
+)
+_RE_MONTH_NAME_ONLY = re.compile(                                  # name + year, no day
+    r"\b(" + "|".join(_MONTH_NAMES_DE) + r")\s+(\d{4})\b",
     re.IGNORECASE,
 )
 
@@ -135,11 +139,19 @@ def _first_date_in(text: str, base_score: int) -> Optional[DateResult]:
             if d:
                 return DateResult(d.isoformat(), base_score)
 
-    # Month-only fallback (e.g. "02.2025" after "Abrechnungsmonat")
+    # Month-only: numeric "02.2025"
     m = _RE_MONTH_YEAR.search(text)
     if m:
         month, year = int(m[1]), int(m[2])
         if 1 <= month <= 12 and 1900 <= year <= 2100:
+            return DateResult(f"{year:04d}-{month:02d}", base_score, month_only=True)
+
+    # Month-only: named "Februar 2025" (used in payslip Abrechnungsmonat fields)
+    m = _RE_MONTH_NAME_ONLY.search(text)
+    if m:
+        month = _MONTH_NAMES_DE[m[1].lower()]
+        year = int(m[2])
+        if 1900 <= year <= 2100:
             return DateResult(f"{year:04d}-{month:02d}", base_score, month_only=True)
 
     return None
