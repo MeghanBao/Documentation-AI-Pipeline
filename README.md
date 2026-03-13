@@ -108,13 +108,43 @@ N:\_pipeline\
     └── Sonstiges\
 ```
 
+### Screenshots
+
+> 📸 *Screenshots will be added after first deployment. See placeholder locations below.*
+
+<!-- TODO: replace the placeholder paths with real screenshots after running the UI -->
+
+**Upload & Process tab**
+![Upload tab](docs/screenshots/ui_upload.png)
+<!-- Screenshot: drag-and-drop file upload with result summary card -->
+
+**Archive browser tab**
+![Archive tab](docs/screenshots/ui_archive.png)
+<!-- Screenshot: archive browser showing documents grouped by category -->
+
+**Processing History tab**
+![History tab](docs/screenshots/ui_history.png)
+<!-- Screenshot: filterable table of recently processed documents -->
+
+**System Status tab**
+![Status tab](docs/screenshots/ui_status.png)
+<!-- Screenshot: Tesseract check, folder status, disk usage metrics -->
+
+---
+
 ### Quick Start (Docker — recommended)
 
 The easiest way to run the pipeline. No Python or Tesseract installation needed.
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-**Windows — one double-click:**
+**Windows — first-time installation (auto-detects Docker):**
+
+```
+install.bat
+```
+
+**Windows — daily use (Docker already installed):**
 
 ```
 start.bat
@@ -139,9 +169,12 @@ The Streamlit interface is available at **http://localhost:8501** after starting
 
 | Tab | Function |
 |---|---|
-| 📤 Hochladen & Verarbeiten | Drag-and-drop file upload; results shown immediately |
+| 📤 Hochladen & Verarbeiten | Drag-and-drop upload; structured result card per file; batch summary table |
 | 📁 Archiv | Browse archived documents by category; refresh button |
-| ⚙️ Einstellungen | View configured folder paths and their status |
+| 🕐 Verlauf | Filterable history of all processed documents (persisted to disk) |
+| 🔍 Intelligente Suche | Natural-language search over the archive via local RAG (opt-in) |
+| 🖥️ Systemstatus | Tesseract version, folder existence, disk usage with low-space alerts |
+| ⚙️ Einstellungen | Full configuration dump (JSON); environment variable reference |
 
 To run the UI without Docker:
 
@@ -207,27 +240,29 @@ python -m doc_pipeline --base-dir N:/_pipeline
 
 ### Roadmap
 
+- [x] **Core pipeline** — OCR → classify → date → archive
+- [x] **Streamlit Web UI** — upload, archive browser, history, system status
+- [x] **RAG system** — sentence-transformers + ChromaDB, fully offline
+- [x] **Docker Compose** — one-click install & start on Windows
 - [ ] **PaddleOCR** — higher accuracy for complex layouts
 - [ ] **Automatic tags** — tag documents beyond the primary type
-- [ ] **Full-text search** — index archive contents
-- [ ] **Embeddings pipeline** — chunk text → embeddings → vector database
-- [ ] **RAG system** — local AI queries over the document archive
+- [ ] **LLM-powered classification** — replace keyword rules with a local model
 
 ```
 Document
    │
    ▼
-  OCR
-   │
-   ▼
-Text chunks
-   │
-   ▼
-Embeddings
-   │
-   ▼
-Vector DB  ←── "Which insurance policies do I have?"
-                "When was my internet contract signed?"
+  OCR  ──────────────────────── Archive
+   │                               │
+   ▼                               ▼
+Classifier                    Embeddings (sentence-transformers)
+   │                               │
+   ▼                               ▼
+Date extractor             Vector DB (ChromaDB)
+   │                               │
+   ▼                               ▼
+Archiver             "Which insurance policies do I have?"
+                     "When was my internet contract signed?"
 ```
 
 ---
@@ -336,13 +371,39 @@ N:\_pipeline\
     └── Sonstiges\
 ```
 
+### Screenshots
+
+> 📸 *Screenshots werden nach dem ersten Deployment eingefügt — Platzhalter siehe unten.*
+
+<!-- TODO: echte Screenshots nach dem ersten Start hinzufügen -->
+
+**Tab: Hochladen & Verarbeiten**
+![Upload-Tab](docs/screenshots/ui_upload.png)
+
+**Tab: Archiv-Browser**
+![Archiv-Tab](docs/screenshots/ui_archive.png)
+
+**Tab: Verarbeitungsverlauf**
+![Verlauf-Tab](docs/screenshots/ui_history.png)
+
+**Tab: Systemstatus**
+![Status-Tab](docs/screenshots/ui_status.png)
+
+---
+
 ### Schnellstart (Docker — empfohlen)
 
 Die einfachste Variante. Kein Python, keine Tesseract-Installation notwendig.
 
 **Voraussetzung:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-**Windows — ein Doppelklick:**
+**Windows — Ersteinrichtung (prüft Docker automatisch):**
+
+```
+install.bat
+```
+
+**Windows — täglicher Betrieb (Docker bereits installiert):**
 
 ```
 start.bat
@@ -367,9 +428,12 @@ Die Streamlit-Oberfläche ist nach dem Docker-Start erreichbar unter **http://lo
 
 | Tab | Funktion |
 |---|---|
-| 📤 Hochladen & Verarbeiten | Drag-and-Drop-Upload; Ergebnis wird sofort angezeigt |
+| 📤 Hochladen & Verarbeiten | Drag-and-Drop-Upload; strukturierte Ergebniskarte pro Datei; Sammelübersicht |
 | 📁 Archiv | Archivierte Dokumente nach Kategorie; Aktualisieren-Schaltfläche |
-| ⚙️ Einstellungen | Konfigurierte Ordnerpfade und deren Status |
+| 🕐 Verlauf | Filterbare Verarbeitungshistorie aller Dokumente (dauerhaft gespeichert) |
+| 🔍 Intelligente Suche | Natürlichsprachliche Suche im Archiv per lokalem RAG (opt-in) |
+| 🖥️ Systemstatus | Tesseract-Version, Ordnercheck, Speicherplatz-Anzeige |
+| ⚙️ Einstellungen | Vollständige Konfigurationsübersicht (JSON); Umgebungsvariablen |
 
 Ohne Docker:
 
@@ -437,25 +501,27 @@ python -m doc_pipeline --base-dir N:/_pipeline
 
 ### Geplante Erweiterungen
 
+- [x] **Kern-Pipeline** — OCR → Klassifizierung → Datum → Archiv
+- [x] **Streamlit-Web-UI** — Upload, Archiv, Verlauf, Systemstatus
+- [x] **RAG-System** — sentence-transformers + ChromaDB, vollständig offline
+- [x] **Docker Compose** — Ein-Klick-Installation und -Start unter Windows
 - [ ] **PaddleOCR** — höhere Erkennungsgenauigkeit bei komplexen Layouts
 - [ ] **Automatische Tags** — Dokumenten über den Primärtyp hinaus verschlagworten
-- [ ] **Volltextsuche** — Archivinhalt durchsuchbar machen
-- [ ] **Embeddings-Pipeline** — Text-Chunks → Embeddings → Vektordatenbank
-- [ ] **RAG-System** — lokale KI-Abfragen über das Dokumentenarchiv
+- [ ] **LLM-gestützte Klassifizierung** — Keyword-Regeln durch lokales Modell ersetzen
 
 ```
 Dokument
    │
    ▼
-  OCR
-   │
-   ▼
-Text-Chunks
-   │
-   ▼
-Embeddings
-   │
-   ▼
-Vektor-DB  ←── "Welche Versicherungen habe ich?"
-                "Wann wurde mein Internetvertrag abgeschlossen?"
+  OCR  ──────────────────────── Archiv
+   │                               │
+   ▼                               ▼
+Klassifizierung          Embeddings (sentence-transformers)
+   │                               │
+   ▼                               ▼
+Datumserkennung             Vektor-DB (ChromaDB)
+   │                               │
+   ▼                               ▼
+Archivierung          "Welche Versicherungen habe ich?"
+                      "Wann wurde mein Vertrag abgeschlossen?"
 ```
