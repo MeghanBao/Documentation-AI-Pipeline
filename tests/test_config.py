@@ -72,6 +72,27 @@ class TestDefaults:
     def test_default_date_min_score(self):
         assert PipelineConfig().date_min_score == 30
 
+    def test_default_enable_rag_false(self):
+        assert PipelineConfig().enable_rag is False
+
+    def test_default_rag_persist_dir_none(self):
+        assert PipelineConfig().rag_persist_dir is None
+
     def test_custom_base_dir(self, tmp_path):
         cfg = PipelineConfig(base_dir=tmp_path / "custom")
         assert cfg.base_dir == tmp_path / "custom"
+
+
+class TestRagPaths:
+    def test_rag_db_defaults_to_base_dir(self, tmp_path):
+        cfg = PipelineConfig(base_dir=tmp_path / "_pipeline")
+        assert cfg.rag_db == tmp_path / "_pipeline" / "rag_db"
+
+    def test_rag_db_uses_custom_persist_dir(self, tmp_path):
+        custom = tmp_path / "my_rag"
+        cfg = PipelineConfig(base_dir=tmp_path / "_pipeline", rag_persist_dir=custom)
+        assert cfg.rag_db == custom
+
+    def test_enable_rag_can_be_set(self):
+        cfg = PipelineConfig(enable_rag=True)
+        assert cfg.enable_rag is True

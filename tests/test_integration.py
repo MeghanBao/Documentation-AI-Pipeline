@@ -179,6 +179,19 @@ class TestLohnabrechnung:
             "check _RE_MONTH_NAME_ONLY in date_extractor.py"
         )
 
+    def test_thema_gehalt_in_filename(self, tmp_config):
+        """Payslip thema must be 'Gehalt', not the raw filename stem."""
+        result = run(self.FIXTURE, tmp_config)
+        assert "Gehalt" in result.name, (
+            f"Expected 'Gehalt' in filename, got: {result.name}"
+        )
+
+    def test_exact_filename(self, tmp_config):
+        result = run(self.FIXTURE, tmp_config)
+        assert result.name == "2025-02_Lohnabrechnung_Gehalt.pdf", (
+            f"Unexpected filename: {result.name}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Cross-fixture: source files are consumed (moved), not copied
