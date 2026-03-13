@@ -12,6 +12,43 @@ from .ocr import extract_text
 
 logger = logging.getLogger(__name__)
 
+# Module-level singleton cache: persist_dir → RAGEngine
+_rag_cache: dict[str, object] = {}
+
+
+def _rag_engine(config: PipelineConfig):
+    """Return a cached RAGEngine for *config* (lazy init)."""
+    from .rag import RAGEngine  # noqa: PLC0415 — optional dependency
+
+    key = str(config.rag_db)
+    if key not in _rag_cache:
+        _rag_cache[key] = RAGEngine.from_dir(config.rag_db)
+    return _rag_cache[key]
+
+
+def _maybe_index_rag(
+    dest: Path,
+    text: str,
+    config: PipelineConfig,
+    doc_type: str,
+    date_str: str,
+) -> None:
+    """Index *text* into the RAG store (non-fatal; errors are only logged)."""
+    try:
+        engine = _rag_engine(config)
+        engine.index_document(
+            doc_id=str(dest),
+            text=text,
+            metadata={
+                "filename": dest.name,
+                "doc_type": doc_type,
+                "date": date_str,
+                "category": dest.parent.name,
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("RAG indexing failed for %s: %s", dest.name, exc)
+
 
 def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
     """
@@ -70,11 +107,17 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
             review_dir=config.review,
         )
         logger.info("Done: %s", dest.name)
-        return dest
     except Exception as exc:
         logger.error("Archiving failed for %s: %s", processing_path.name, exc)
         _move_to_error(processing_path, config.input_error)
         return None
+
+    # --- Step 5: RAG indexing (opt-in, non-fatal) ---
+    if config.enable_rag:
+        date_str = date_result.date_str if date_result else ""
+        _maybe_index_rag(dest, text, config, classification.doc_type, date_str)
+
+    return dest
 
 
 def _move_to_error(src: Path, error_dir: Path) -> None:

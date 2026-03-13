@@ -15,9 +15,18 @@ _SUPPORTED_TYPES = ["pdf", "png", "jpg", "jpeg", "tif", "tiff"]
 
 def _get_config() -> PipelineConfig:
     base_dir = Path(os.environ.get("PIPELINE_BASE_DIR", str(Path.home() / "_pipeline")))
-    config = PipelineConfig(base_dir=base_dir)
+    enable_rag = os.environ.get("PIPELINE_ENABLE_RAG", "").lower() in ("1", "true", "yes")
+    config = PipelineConfig(base_dir=base_dir, enable_rag=enable_rag)
     config.ensure_dirs()
     return config
+
+
+@st.cache_resource
+def _get_rag_engine(persist_dir: str):
+    """Load (and cache) the RAGEngine.  Called only when RAG is enabled."""
+    from .rag import RAGEngine  # noqa: PLC0415
+
+    return RAGEngine.from_dir(Path(persist_dir))
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +131,67 @@ def _tab_archive(config: PipelineConfig) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Tab: Smart Search (RAG)
+# ---------------------------------------------------------------------------
+
+def _tab_search(config: PipelineConfig) -> None:
+    st.subheader("Intelligente Suche")
+
+    if not config.enable_rag:
+        st.info(
+            "Die intelligente Suche ist deaktiviert.\n\n"
+            "Zum Aktivieren die Umgebungsvariable `PIPELINE_ENABLE_RAG=true` setzen "
+            "und den Container neu starten."
+        )
+        return
+
+    engine = _get_rag_engine(str(config.rag_db))
+
+    st.caption(
+        f"Durchsuche **{engine.chunk_count}** Textabschnitte aus dem Archiv "
+        "mit natürlichsprachlichen Fragen."
+    )
+
+    if engine.chunk_count == 0:
+        st.warning(
+            "Das Suchindex ist noch leer. "
+            "Lade Dokumente über den Tab **Hochladen & Verarbeiten** hoch — "
+            "sie werden automatisch indexiert."
+        )
+        return
+
+    question = st.text_input(
+        "Frage eingeben",
+        placeholder='z. B. "Welche Stromrechnung hatte den höchsten Betrag?"',
+    )
+
+    n_results = st.slider("Anzahl Ergebnisse", min_value=1, max_value=10, value=5)
+
+    if not question:
+        return
+
+    with st.spinner("Suche läuft …"):
+        results = engine.query(question, n_results=n_results)
+
+    if not results:
+        st.info("Keine passenden Abschnitte gefunden.")
+        return
+
+    st.divider()
+    for i, hit in enumerate(results, 1):
+        meta = hit["metadata"]
+        score = 1.0 - hit["distance"]  # cosine distance → similarity
+        header = (
+            f"**#{i}** — `{meta.get('filename', '?')}`"
+            f"  ·  Typ: {meta.get('doc_type', '?')}"
+            f"  ·  Datum: {meta.get('date', '?')}"
+            f"  ·  Relevanz: {score:.0%}"
+        )
+        with st.expander(header):
+            st.text(hit["text"])
+
+
+# ---------------------------------------------------------------------------
 # Tab: Settings
 # ---------------------------------------------------------------------------
 
@@ -164,9 +234,10 @@ def main() -> None:
 
     config = _get_config()
 
-    tab_upload, tab_archive, tab_settings = st.tabs([
+    tab_upload, tab_archive, tab_search, tab_settings = st.tabs([
         "📤  Hochladen & Verarbeiten",
         "📁  Archiv",
+        "🔍  Intelligente Suche",
         "⚙️  Einstellungen",
     ])
 
@@ -175,6 +246,9 @@ def main() -> None:
 
     with tab_archive:
         _tab_archive(config)
+
+    with tab_search:
+        _tab_search(config)
 
     with tab_settings:
         _tab_settings(config)

@@ -20,6 +20,7 @@ doc-pipeline = "doc_pipeline.main:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+rag = ["sentence-transformers>=2.7", "chromadb>=0.5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

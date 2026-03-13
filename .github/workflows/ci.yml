@@ -18,15 +18,29 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install Tesseract with German language pack
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y tesseract-ocr tesseract-ocr-deu
 
+      - name: Install CPU-only PyTorch (avoids pulling the large GPU build)
+        run: |
+          pip install torch==2.3.1+cpu \
+            --extra-index-url https://download.pytorch.org/whl/cpu
+
       - name: Install Python dependencies
         run: |
           pip install -e .
           pip install pytest ruff reportlab
+          pip install sentence-transformers>=2.7 "chromadb>=0.5"
 
       - name: Lint — ruff check src/
         run: ruff check src/

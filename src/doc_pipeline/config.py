@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 
 @dataclass
@@ -11,6 +12,9 @@ class PipelineConfig:
     ocr_min_chars_per_page: int = 50
     # Minimum score for a date to be considered reliable (Stage 4 threshold)
     date_min_score: int = 30
+    # RAG settings (opt-in)
+    enable_rag: bool = False
+    rag_persist_dir: Optional[Path] = None
 
     # --- Derived folder paths ---
     @property
@@ -36,6 +40,13 @@ class PipelineConfig:
     @property
     def archive(self) -> Path:
         return self.base_dir / "archiv"
+
+    @property
+    def rag_db(self) -> Path:
+        """Directory for ChromaDB persistence (defaults to <base_dir>/rag_db)."""
+        if self.rag_persist_dir is not None:
+            return self.rag_persist_dir
+        return self.base_dir / "rag_db"
 
     def ensure_dirs(self) -> None:
         """Create all required pipeline folders if they do not exist."""
