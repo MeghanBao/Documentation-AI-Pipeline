@@ -28,7 +28,7 @@ def build_filename(
     uncertain = not classification.confident or date_result is None
 
     if uncertain:
-        type_part = classification.doc_type if classification.confident else "Dokument"
+        type_part = classification.doc_type  # always show detected type per spec
         safe_stem = _sanitize(original_stem)[:30]
         return f"UNSICHER_{type_part}_{safe_stem}", True
 

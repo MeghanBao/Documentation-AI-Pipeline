@@ -66,40 +66,44 @@ def extract_date(text: str, min_score: int = 30) -> Optional[DateResult]:
     """
     candidates: list[DateResult] = []
 
-    # Stage 1 + 2: scan for labeled fields and extract the following date
+    # Stage 1 + 2: scan for labeled fields and extract the date that follows.
+    # Snippet is capped at 20 chars — enough for any supported date format
+    # ("18 Februar 2021" = 15 chars) without bleeding into adjacent content.
     for label_re, base_score in _LABELED_FIELDS:
         for m in label_re.finditer(text):
-            snippet = text[m.end(): m.end() + 35]
+            snippet = text[m.end(): m.end() + 20]
             result = _first_date_in(snippet, base_score)
             if result:
                 logger.debug("Labeled date (score=%d): %s", result.score, result.date_str)
                 candidates.append(result)
 
-    # Stage 3: extract all dates in full text with a generic score
-    for m in _RE_DMY_DOT.finditer(text):
-        d = _to_date(int(m[1]), int(m[2]), int(m[3]))
-        if d:
-            candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
+    # Stage 3: generic full-text scan — only runs when Stage 1+2 found nothing.
+    # Per spec: "Falls kein Feld erkannt wird: alle Datumsangaben analysieren."
+    if not candidates:
+        for m in _RE_DMY_DOT.finditer(text):
+            d = _to_date(int(m[1]), int(m[2]), int(m[3]))
+            if d:
+                candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
 
-    for m in _RE_ISO.finditer(text):
-        d = _to_date(int(m[3]), int(m[2]), int(m[1]))  # YYYY-MM-DD → day=m[3]
-        if d:
-            candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
+        for m in _RE_ISO.finditer(text):
+            d = _to_date(int(m[3]), int(m[2]), int(m[1]))  # YYYY-MM-DD → day=m[3]
+            if d:
+                candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
 
-    for m in _RE_DMY_DASH.finditer(text):
-        d = _to_date(int(m[1]), int(m[2]), int(m[3]))
-        if d:
-            candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
+        for m in _RE_DMY_DASH.finditer(text):
+            d = _to_date(int(m[1]), int(m[2]), int(m[3]))
+            if d:
+                candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
 
-    for m in _RE_DMY_SLASH.finditer(text):
-        d = _to_date(int(m[1]), int(m[2]), int(m[3]))
-        if d:
-            candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
+        for m in _RE_DMY_SLASH.finditer(text):
+            d = _to_date(int(m[1]), int(m[2]), int(m[3]))
+            if d:
+                candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
 
-    for m in _RE_MONTH_NAME.finditer(text):
-        d = _to_date(int(m[1]), _MONTH_NAMES_DE[m[2].lower()], int(m[3]))
-        if d:
-            candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
+        for m in _RE_MONTH_NAME.finditer(text):
+            d = _to_date(int(m[1]), _MONTH_NAMES_DE[m[2].lower()], int(m[3]))
+            if d:
+                candidates.append(DateResult(d.isoformat(), _GENERIC_DATE_SCORE))
 
     # Stage 4: no plausible date
     if not candidates:
