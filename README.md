@@ -106,30 +106,6 @@ N:\_pipeline\
     ├── Arbeit\
     ├── Verträge\
     └── Sonstiges\
-```
-
-### Screenshots
-
-> 📸 *Screenshots will be added after first deployment. See placeholder locations below.*
-
-<!-- TODO: replace the placeholder paths with real screenshots after running the UI -->
-
-**Upload & Process tab**
-![Upload tab](docs/screenshots/ui_upload.png)
-<!-- Screenshot: drag-and-drop file upload with result summary card -->
-
-**Archive browser tab**
-![Archive tab](docs/screenshots/ui_archive.png)
-<!-- Screenshot: archive browser showing documents grouped by category -->
-
-**Processing History tab**
-![History tab](docs/screenshots/ui_history.png)
-<!-- Screenshot: filterable table of recently processed documents -->
-
-**System Status tab**
-![Status tab](docs/screenshots/ui_status.png)
-<!-- Screenshot: Tesseract check, folder status, disk usage metrics -->
-
 ---
 
 ### Quick Start (Docker — recommended)
@@ -371,26 +347,6 @@ N:\_pipeline\
     └── Sonstiges\
 ```
 
-### Screenshots
-
-> 📸 *Screenshots werden nach dem ersten Deployment eingefügt — Platzhalter siehe unten.*
-
-<!-- TODO: echte Screenshots nach dem ersten Start hinzufügen -->
-
-**Tab: Hochladen & Verarbeiten**
-![Upload-Tab](docs/screenshots/ui_upload.png)
-
-**Tab: Archiv-Browser**
-![Archiv-Tab](docs/screenshots/ui_archive.png)
-
-**Tab: Verarbeitungsverlauf**
-![Verlauf-Tab](docs/screenshots/ui_history.png)
-
-**Tab: Systemstatus**
-![Status-Tab](docs/screenshots/ui_status.png)
-
----
-
 ### Schnellstart (Docker — empfohlen)
 
 Die einfachste Variante. Kein Python, keine Tesseract-Installation notwendig.
@@ -505,7 +461,7 @@ python -m doc_pipeline --base-dir N:/_pipeline
 - [x] **Streamlit-Web-UI** — Upload, Archiv, Verlauf, Systemstatus
 - [x] **RAG-System** — sentence-transformers + ChromaDB, vollständig offline
 - [x] **Docker Compose** — Ein-Klick-Installation und -Start unter Windows
-- [ ] **PaddleOCR** — höhere Erkennungsgenauigkeit bei komplexen Layouts
+- [x] **PaddleOCR** — höhere Erkennungsgenauigkeit bei komplexen Layouts
 - [ ] **Automatische Tags** — Dokumenten über den Primärtyp hinaus verschlagworten
 - [ ] **LLM-gestützte Klassifizierung** — Keyword-Regeln durch lokales Modell ersetzen
 
