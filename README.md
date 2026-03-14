@@ -244,7 +244,7 @@ python -m doc_pipeline --base-dir N:/_pipeline
 - [x] **Streamlit Web UI** — upload, archive browser, history, system status
 - [x] **RAG system** — sentence-transformers + ChromaDB, fully offline
 - [x] **Docker Compose** — one-click install & start on Windows
-- [ ] **PaddleOCR** — higher accuracy for complex layouts
+- [x] **PaddleOCR** — higher accuracy for complex layouts
 - [ ] **Automatic tags** — tag documents beyond the primary type
 - [ ] **LLM-powered classification** — replace keyword rules with a local model
 
