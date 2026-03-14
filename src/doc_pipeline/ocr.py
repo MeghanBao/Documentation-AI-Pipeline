@@ -1,5 +1,6 @@
 """OCR module: PyMuPDF native extraction → Tesseract fallback → PaddleOCR fallback."""
 import logging
+import sys
 from pathlib import Path
 
 import fitz  # PyMuPDF
@@ -7,6 +8,14 @@ import pytesseract
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+# On Windows, Tesseract is often installed but not added to PATH.
+# Probe the standard installation directory so pytesseract can find it
+# without requiring a manual PATH change or system restart.
+if sys.platform == "win32":
+    _WIN_TESS = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+    if _WIN_TESS.exists() and pytesseract.pytesseract.tesseract_cmd == "tesseract":
+        pytesseract.pytesseract.tesseract_cmd = str(_WIN_TESS)
 
 _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
