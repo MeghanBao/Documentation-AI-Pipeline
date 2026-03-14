@@ -6,3 +6,7 @@ streamlit>=1.35
 # RAG
 sentence-transformers>=2.7
 chromadb>=0.5
+# PaddleOCR — optional third-stage OCR engine for complex/rotated scans
+# Install separately if needed; the pipeline degrades gracefully without it:
+#   pip install paddleocr>=2.7
+# paddleocr>=2.7

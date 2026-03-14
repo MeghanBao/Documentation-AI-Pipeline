@@ -81,6 +81,7 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
             processing_path,
             lang=config.ocr_lang,
             min_chars_per_page=config.ocr_min_chars_per_page,
+            paddleocr_enabled=config.paddleocr_enabled,
         )
     except Exception as exc:
         logger.error("OCR failed for %s: %s", processing_path.name, exc)

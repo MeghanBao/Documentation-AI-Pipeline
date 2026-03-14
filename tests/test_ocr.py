@@ -92,7 +92,9 @@ class TestTesseractFallback:
         with patch("doc_pipeline.ocr.fitz.open", return_value=doc), \
              patch("doc_pipeline.ocr.Image.frombytes"), \
              patch("doc_pipeline.ocr.pytesseract.image_to_string", return_value="OCR text"):
-            result = extract_text(Path("dummy.pdf"), min_chars_per_page=50)
+            # paddleocr_enabled=False: isolate Stage 2 only
+            result = extract_text(Path("dummy.pdf"), min_chars_per_page=50,
+                                  paddleocr_enabled=False)
 
         assert result == "OCR text"
         page.get_pixmap.assert_called_once()
@@ -116,7 +118,8 @@ class TestTesseractFallback:
         with patch("doc_pipeline.ocr.fitz.open", return_value=doc), \
              patch("doc_pipeline.ocr.Image.frombytes"), \
              patch("doc_pipeline.ocr.pytesseract.image_to_string", return_value="OCR page 2"):
-            result = extract_text(Path("dummy.pdf"), min_chars_per_page=30)
+            result = extract_text(Path("dummy.pdf"), min_chars_per_page=30,
+                                  paddleocr_enabled=False)
 
         assert "Voll mit Text" in result
         assert "OCR page 2" in result

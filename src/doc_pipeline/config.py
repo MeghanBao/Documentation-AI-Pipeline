@@ -12,6 +12,11 @@ class PipelineConfig:
     ocr_min_chars_per_page: int = 50
     # Minimum score for a date to be considered reliable (Stage 4 threshold)
     date_min_score: int = 30
+    # OCR engine priority (controls which engines are attempted in order)
+    ocr_engine_priority: list[str] = field(
+        default_factory=lambda: ["pymupdf", "tesseract", "paddleocr"]
+    )
+    paddleocr_enabled: bool = True
     # RAG settings (opt-in)
     enable_rag: bool = False
     rag_persist_dir: Optional[Path] = None

@@ -1,9 +1,15 @@
 FROM python:3.11-slim
 
 # System dependencies: Tesseract + German language pack
+# libgl1 / libglib2.0-0 are required by OpenCV which PaddleOCR uses internally
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tesseract-ocr \
         tesseract-ocr-deu \
+        libgl1 \
+        libglib2.0-0 \
+        libsm6 \
+        libxrender1 \
+        libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -17,6 +23,10 @@ RUN pip install --no-cache-dir \
 # CPU torch installed above instead of pulling the GPU variant)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# PaddleOCR — optional third-stage engine (comment out to skip for smaller images)
+RUN pip install --no-cache-dir "paddleocr>=2.7" || \
+    echo "PaddleOCR installation failed — third-stage OCR will be skipped"
 
 # Copy source and install the pipeline package
 COPY pyproject.toml .
