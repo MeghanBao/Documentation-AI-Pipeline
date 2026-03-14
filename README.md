@@ -108,6 +108,34 @@ N:\_pipeline\
     └── Sonstiges\
 ---
 
+### Quick Start (Windows — local Python, no Docker)
+
+Designed for non-technical users. Double-click to start, double-click to stop.
+
+**Prerequisites**
+
+- Python ≥ 3.10 — [python.org/downloads](https://www.python.org/downloads/) *(tick "Add Python to PATH" during install)*
+- Tesseract OCR — [UB Mannheim installer](https://github.com/UB-Mannheim/tesseract/wiki) *(select German language pack during install)*
+
+**First-time setup** (one-off, in the project folder):
+
+```
+pip install -e .
+```
+
+**Daily use:**
+
+| Script | Action |
+|---|---|
+| `start_pipeline.bat` | Starts file watcher + web UI, opens browser automatically |
+| `stop_pipeline.bat` | Stops all pipeline processes cleanly |
+
+Both scripts check whether Python and Tesseract are installed and show a friendly German-language error message if something is missing. Pressing any key in the `start_pipeline.bat` window (or running `stop_pipeline.bat`) shuts down all background processes.
+
+Pipeline data is stored in `data\_pipeline\` inside the project folder.
+
+---
+
 ### Quick Start (Docker — recommended)
 
 The easiest way to run the pipeline. No Python or Tesseract installation needed.
@@ -346,6 +374,34 @@ N:\_pipeline\
     ├── Verträge\
     └── Sonstiges\
 ```
+
+### Schnellstart (Windows — lokales Python, kein Docker)
+
+Für Nicht-Techniker konzipiert. Doppelklick zum Starten, Doppelklick zum Stoppen.
+
+**Voraussetzungen**
+
+- Python ≥ 3.10 — [python.org/downloads](https://www.python.org/downloads/) *(bei der Installation „Add Python to PATH" aktivieren)*
+- Tesseract OCR — [UB-Mannheim-Installer](https://github.com/UB-Mannheim/tesseract/wiki) *(bei der Installation das Sprachpaket „German" auswählen)*
+
+**Einmalige Einrichtung** (im Projektordner ausführen):
+
+```
+pip install -e .
+```
+
+**Täglicher Betrieb:**
+
+| Skript | Funktion |
+|---|---|
+| `start_pipeline.bat` | Startet Dateiüberwachung + Web-Oberfläche, öffnet Browser automatisch |
+| `stop_pipeline.bat` | Beendet alle Pipeline-Prozesse sauber |
+
+Beide Skripte prüfen, ob Python und Tesseract installiert sind, und zeigen bei Problemen eine verständliche Fehlermeldung auf Deutsch. Eine beliebige Taste im `start_pipeline.bat`-Fenster (oder das Ausführen von `stop_pipeline.bat`) beendet alle Hintergrundprozesse.
+
+Dokumentendaten werden im Unterordner `data\_pipeline\` des Projektordners gespeichert.
+
+---
 
 ### Schnellstart (Docker — empfohlen)
 
