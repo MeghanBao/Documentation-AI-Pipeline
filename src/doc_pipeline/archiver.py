@@ -10,6 +10,9 @@ from .date_extractor import DateResult
 
 logger = logging.getLogger(__name__)
 
+# Windows default MAX_PATH limit (characters including null terminator)
+_MAX_PATH = 259
+
 
 def build_filename(
     classification: Classification,
@@ -42,21 +45,57 @@ def archive_document(
     date_result: Optional[DateResult],
     archive_base: Path,
     review_dir: Path,
+    review_reason: str = "",
+    original_name: str = "",
 ) -> Path:
     """
     Move *src_path* to the correct destination with the generated filename.
 
+    *review_reason* is written as a sidecar .reason.txt in review/ so the
+    user knows why the document was flagged for manual inspection.
+    *original_name* is used as the fallback stem (instead of the UUID-tagged
+    processing filename) for UNSICHER_ filenames.
+
     Returns the final destination path.
+    Raises OSError if the destination path exceeds the Windows 260-char limit.
     """
-    stem, uncertain = build_filename(classification, date_result, src_path.stem)
+    fallback_stem = Path(original_name).stem if original_name else src_path.stem
+    stem, uncertain = build_filename(classification, date_result, fallback_stem)
     dest_name = stem + src_path.suffix.lower()
 
     dest_dir = review_dir if uncertain else archive_base / classification.archive_subdir
     dest_path = _unique_path(dest_dir / dest_name)
 
+    _check_path_length(dest_path)
+
     shutil.move(str(src_path), str(dest_path))
     logger.info("Archived: %s → %s", src_path.name, dest_path)
+
+    # Write sidecar reason file so the user knows why this went to review/
+    if uncertain and review_reason:
+        reason_path = dest_path.with_suffix(".reason.txt")
+        try:
+            reason_path.write_text(
+                f"Originaldatei: {original_name or src_path.name}\n"
+                f"Grund: {review_reason}\n",
+                encoding="utf-8",
+            )
+            logger.debug("Review reason written: %s", reason_path.name)
+        except OSError as exc:
+            logger.warning("Could not write review reason file: %s", exc)
+
     return dest_path
+
+
+def _check_path_length(path: Path) -> None:
+    """Raise OSError with a clear message if path exceeds the Windows 260-char limit."""
+    length = len(str(path))
+    if length > _MAX_PATH:
+        raise OSError(
+            f"Destination path exceeds Windows 260-character limit "
+            f"({length} chars): {path}\n"
+            "Tip: shorten PIPELINE_BASE_DIR or enable long path support in Windows."
+        )
 
 
 def _unique_path(path: Path) -> Path:

@@ -1,6 +1,8 @@
 """Main pipeline: ties OCR → classify → date extraction → archiving together."""
 import logging
 import shutil
+import time
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -65,10 +67,13 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
     On OCR failure the file is moved to input_error/.
     Uncertain classification or missing date → review/ with UNSICHER_ prefix.
     """
-    processing_path = config.processing / file_path.name
+    # Include a short UUID to avoid collisions when two files with the same
+    # name arrive simultaneously from input_scanner/ and input_manual/.
+    unique_tag = uuid.uuid4().hex[:8]
+    processing_path = config.processing / f"{file_path.stem}_{unique_tag}{file_path.suffix.lower()}"
 
     try:
-        shutil.move(str(file_path), str(processing_path))
+        _move_with_retry(file_path, processing_path)
     except OSError as exc:
         logger.error("Cannot move %s to processing: %s", file_path.name, exc)
         return None
@@ -98,7 +103,15 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
     if date_result is None:
         logger.warning("No reliable date found for %s → review", processing_path.name)
 
-    # --- Step 4: Archive ---
+    # --- Step 4: Build review reason (written as sidecar in review/) ---
+    reasons: list[str] = []
+    if not classification.confident:
+        reasons.append("Dokumenttyp nicht erkannt")
+    if date_result is None:
+        reasons.append("Kein zuverlässiges Datum gefunden")
+    review_reason = "; ".join(reasons)
+
+    # --- Step 5: Archive ---
     try:
         dest = archive_document(
             src_path=processing_path,
@@ -106,19 +119,38 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
             date_result=date_result,
             archive_base=config.archive,
             review_dir=config.review,
+            review_reason=review_reason,
+            original_name=file_path.name,
         )
         logger.info("Done: %s", dest.name)
-    except Exception as exc:
+    except OSError as exc:
         logger.error("Archiving failed for %s: %s", processing_path.name, exc)
         _move_to_error(processing_path, config.input_error)
         return None
 
-    # --- Step 5: RAG indexing (opt-in, non-fatal) ---
+    # --- Step 6: RAG indexing (opt-in, non-fatal) ---
     if config.enable_rag:
         date_str = date_result.date_str if date_result else ""
         _maybe_index_rag(dest, text, config, classification.doc_type, date_str)
 
     return dest
+
+
+def _move_with_retry(src: Path, dest: Path, retries: int = 5, delay: float = 1.0) -> None:
+    """Move *src* to *dest*, retrying on PermissionError (Windows file lock)."""
+    for attempt in range(retries):
+        try:
+            shutil.move(str(src), str(dest))
+            return
+        except PermissionError:
+            if attempt < retries - 1:
+                logger.debug(
+                    "PermissionError moving %s, retry %d/%d",
+                    src.name, attempt + 1, retries,
+                )
+                time.sleep(delay)
+            else:
+                raise
 
 
 def _move_to_error(src: Path, error_dir: Path) -> None:

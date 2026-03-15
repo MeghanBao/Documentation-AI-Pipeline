@@ -172,7 +172,10 @@ class TestErrorPath:
 
         error_files = list(tmp_config.input_error.glob("*.pdf"))
         assert len(error_files) == 1
-        assert error_files[0].name == "test.pdf"
+        # filename now has a UUID suffix (e.g. test_a1b2c3d4.pdf) to prevent
+        # collisions when the same filename arrives from two input folders.
+        assert error_files[0].stem.startswith("test_")
+        assert error_files[0].suffix == ".pdf"
 
     def test_archive_failure_returns_none(self, tmp_config):
         src = make_src(tmp_config)

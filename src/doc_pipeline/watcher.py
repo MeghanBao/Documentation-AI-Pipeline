@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 _SUPPORTED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
+# Retry settings for locked files (scanner apps often keep files open briefly)
+_LOCK_RETRIES = 15
+_LOCK_DELAY = 2.0  # seconds between retries
+
 
 class _DocumentHandler(FileSystemEventHandler):
     def __init__(self, config: PipelineConfig) -> None:
@@ -26,6 +30,13 @@ class _DocumentHandler(FileSystemEventHandler):
             return
         logger.info("New file detected: %s", path.name)
         _wait_for_stable_size(path)
+        if not _wait_until_unlocked(path):
+            logger.error(
+                "File still locked after %d retries — skipping: %s",
+                _LOCK_RETRIES,
+                path.name,
+            )
+            return
         process_document(path, self._config)
 
 
@@ -71,3 +82,27 @@ def _wait_for_stable_size(
             return
         prev_size = size
         time.sleep(poll_interval)
+
+
+def _wait_until_unlocked(
+    path: Path,
+    retries: int = _LOCK_RETRIES,
+    delay: float = _LOCK_DELAY,
+) -> bool:
+    """Return True once the file can be opened exclusively (not held by another process).
+
+    On Windows, scanner apps often keep files open after writing completes.
+    Opening with 'r+b' mode requires an exclusive handle and reliably detects this.
+    """
+    for attempt in range(retries):
+        try:
+            with path.open("r+b"):
+                return True
+        except PermissionError:
+            logger.debug(
+                "File locked, waiting (%d/%d): %s", attempt + 1, retries, path.name
+            )
+            time.sleep(delay)
+        except FileNotFoundError:
+            return False
+    return False
