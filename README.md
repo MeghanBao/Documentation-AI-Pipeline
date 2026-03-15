@@ -169,6 +169,8 @@ Pipeline data is stored in `./data/_pipeline/` on the host.
 
 ### Web UI
 
+![Streamlit UI Screenshot](docs/Screenshot%20.png)
+
 The Streamlit interface is available at **http://localhost:8501** after starting with Docker.
 
 | Tab | Function |
@@ -435,6 +437,8 @@ Beim ersten Start wird das Image gebaut (≈ 2–5 Min.). Danach startet die Pip
 Die Dokumentendaten liegen in `./data/_pipeline/` auf dem Host-Rechner.
 
 ### Web-Oberfläche
+
+![Streamlit UI Screenshot](docs/Screenshot%20.png)
 
 Die Streamlit-Oberfläche ist nach dem Docker-Start erreichbar unter **http://localhost:8501**.
 
