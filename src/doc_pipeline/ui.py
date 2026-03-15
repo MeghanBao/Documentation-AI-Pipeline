@@ -9,8 +9,12 @@ from typing import Optional
 
 import streamlit as st
 
-from .config import PipelineConfig
-from .pipeline import process_document
+try:
+    from .config import PipelineConfig
+    from .pipeline import process_document
+except ImportError:
+    from doc_pipeline.config import PipelineConfig  # type: ignore[no-redef]
+    from doc_pipeline.pipeline import process_document  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +37,10 @@ def _get_config() -> PipelineConfig:
 @st.cache_resource
 def _get_rag_engine(persist_dir: str):
     """Load (and cache) the RAGEngine. Called only when RAG is enabled."""
-    from .rag import RAGEngine  # noqa: PLC0415
+    try:
+        from .rag import RAGEngine  # noqa: PLC0415
+    except ImportError:
+        from doc_pipeline.rag import RAGEngine  # type: ignore[no-redef]  # noqa: PLC0415
 
     return RAGEngine.from_dir(Path(persist_dir))
 
