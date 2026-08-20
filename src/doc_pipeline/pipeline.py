@@ -128,6 +128,24 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
         _move_to_error(processing_path, config.input_error)
         return None
 
+    # --- Step 5b: Provenance journal (non-fatal) — enables `why` / `undo` ---
+    if getattr(config, "enable_journal", True):
+        try:
+            from .ledger import record_archive  # noqa: PLC0415 — keep import light
+
+            record_archive(
+                config,
+                original_name=file_path.name,
+                original_src=file_path,
+                processing_path=processing_path,
+                dest=dest,
+                classification=classification,
+                date_result=date_result,
+                review_reason=review_reason,
+            )
+        except Exception as exc:  # noqa: BLE001 — journaling must never break the pipeline
+            logger.warning("Journal write failed for %s: %s", dest.name, exc)
+
     # --- Step 6: RAG indexing (opt-in, non-fatal) ---
     if config.enable_rag:
         date_str = date_result.date_str if date_result else ""

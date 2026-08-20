@@ -233,6 +233,40 @@ doc-pipeline --base-dir N:/_pipeline --log-level DEBUG
 python -m doc_pipeline --base-dir N:/_pipeline
 ```
 
+### Provenance & Undo (`why` / `undo`)
+
+Every archived document is recorded in an **append-only journal**
+(`<base_dir>/.pipeline_journal/events.jsonl`), so you can ask *why* a file was
+named and routed the way it was — and **undo** a wrong archive move. Undo never
+rewrites history: it appends an `undo` event, and the file is moved back to
+`<base_dir>/undone/` under its original name.
+
+```bash
+# Why did this file end up here, named like this?
+python -m doc_pipeline.ledger why archiv/Arbeit/2025-02_Lohnabrechnung_Gehalt.pdf
+
+# Reverse the last archive move (or a specific file)
+python -m doc_pipeline.ledger undo                # most recent
+python -m doc_pipeline.ledger undo 2025-02_Lohnabrechnung_Gehalt.pdf
+
+# Recent journal events
+python -m doc_pipeline.ledger history -n 20
+```
+
+Example `why` output:
+
+```
+📄 backstory · 2025-02_Lohnabrechnung_Gehalt.pdf
+  from:  scan_001.pdf
+  ── why ──────────────────────────────────
+  type:  Lohnabrechnung  (thema: Gehalt)  [confident]
+  date:  2025-02 · Stage 2 · Abrechnungsmonat · score 65
+  route: Arbeit
+```
+
+Journalling is on by default (`PipelineConfig.enable_journal`); set it to
+`False` to disable.
+
 ### Hardware (Reference Setup)
 
 | Component | Spec |

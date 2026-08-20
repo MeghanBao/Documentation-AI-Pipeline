@@ -20,6 +20,8 @@ class PipelineConfig:
     # RAG settings (opt-in)
     enable_rag: bool = False
     rag_persist_dir: Optional[Path] = None
+    # Append-only provenance journal enabling `why` / `undo` (see ledger.py)
+    enable_journal: bool = True
 
     # --- Derived folder paths ---
     @property
