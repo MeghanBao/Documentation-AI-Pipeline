@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -19,7 +18,7 @@ class PipelineConfig:
     paddleocr_enabled: bool = True
     # RAG settings (opt-in)
     enable_rag: bool = False
-    rag_persist_dir: Optional[Path] = None
+    rag_persist_dir: Path | None = None
     # Append-only provenance journal enabling `why` / `undo` (see ledger.py)
     enable_journal: bool = True
 

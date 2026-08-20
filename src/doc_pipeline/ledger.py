@@ -28,9 +28,9 @@ import logging
 import os
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .config import PipelineConfig
 
@@ -54,7 +54,7 @@ _SCORE_FIELD: dict[int, str] = {
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def journal_path(base_dir: Path) -> Path:
@@ -98,7 +98,7 @@ def record_archive(
     classification: Any,
     date_result: Any,
     review_reason: str = "",
-) -> Optional[str]:
+) -> str | None:
     """Append one ``archive`` event. Returns its id, or None on failure.
 
     Best-effort: journaling must never break the pipeline, so all errors are
@@ -117,6 +117,7 @@ def record_archive(
             "archive_subdir": getattr(classification, "archive_subdir", ""),
             "thema": getattr(classification, "thema", ""),
             "confident": bool(getattr(classification, "confident", False)),
+            "matched_keyword": getattr(classification, "matched_keyword", ""),
             "date_str": getattr(date_result, "date_str", None) if date_result else None,
             "date_score": getattr(date_result, "score", None) if date_result else None,
             "month_only": bool(getattr(date_result, "month_only", False)) if date_result else False,
@@ -150,7 +151,7 @@ def _match(event: dict[str, Any], target: str) -> bool:
 
 def find_archive(
     events: list[dict[str, Any]], target: str, *, active_only: bool = False
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Latest archive event whose dest matches ``target`` (exact path or basename)."""
     pool = active_archives(events) if active_only else [e for e in events if e.get("type") == "archive"]
     matches = [e for e in pool if _match(e, target)]
@@ -175,12 +176,14 @@ def format_chain(event: dict[str, Any], *, undone: bool = False, restored_to: st
     dest = Path(event.get("dest", "?"))
     confident = "confident" if event.get("confident") else "UNSURE → review"
     route = event.get("archive_subdir") or "review"
+    mk = event.get("matched_keyword")
+    matched = f' · matched "{mk}"' if mk else ""
     lines = [
         f"📄 backstory · {dest.name}",
         f"  archived: {event.get('dest')}   ({event.get('ts')})",
         f"  from:     {event.get('original_name')}",
         "  ── why " + "─" * 34,
-        f"  type:  {event.get('doc_type')}  (thema: {event.get('thema')})  [{confident}]",
+        f"  type:  {event.get('doc_type')}{matched}  (thema: {event.get('thema')})  [{confident}]",
         f"  {_date_line(event)}",
         f"  route: {route}",
     ]
@@ -192,7 +195,7 @@ def format_chain(event: dict[str, Any], *, undone: bool = False, restored_to: st
     return "\n".join(lines)
 
 
-def explain(config: PipelineConfig, target: str) -> Optional[str]:
+def explain(config: PipelineConfig, target: str) -> str | None:
     events = load_events(config.base_dir)
     event = find_archive(events, target)
     if event is None:
@@ -219,7 +222,7 @@ def _unique(path: Path) -> Path:
     return cand
 
 
-def undo(config: PipelineConfig, target: Optional[str] = None) -> Optional[dict[str, Any]]:
+def undo(config: PipelineConfig, target: str | None = None) -> dict[str, Any] | None:
     """Reverse an archive move: put the file back under ``<base_dir>/undone/`` with
     its original name, drop the review sidecar, and append an ``undo`` event.
 
@@ -278,7 +281,7 @@ def _load_config() -> PipelineConfig:
     return PipelineConfig(base_dir=Path(base)) if base else PipelineConfig()
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="doc-pipeline-ledger",
         description="Provenance (why) and reversible undo for the document pipeline.",

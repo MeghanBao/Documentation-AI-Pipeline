@@ -5,7 +5,6 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import streamlit as st
 
@@ -38,9 +37,11 @@ def _get_config() -> PipelineConfig:
 def _get_rag_engine(persist_dir: str):
     """Load (and cache) the RAGEngine. Called only when RAG is enabled."""
     try:
-        from .rag import RAGEngine  # noqa: PLC0415
+        from .rag import RAGEngine
     except ImportError:
-        from doc_pipeline.rag import RAGEngine  # type: ignore[no-redef]  # noqa: PLC0415
+        from doc_pipeline.rag import (
+            RAGEngine,  # type: ignore[no-redef]
+        )
 
     return RAGEngine.from_dir(Path(persist_dir))
 
@@ -62,7 +63,7 @@ def _read_history(config: PipelineConfig) -> list[dict]:
 def _append_history(
     config: PipelineConfig,
     original: str,
-    result: Optional[Path],
+    result: Path | None,
     status: str,
 ) -> None:
     """Append one entry to the on-disk history log (newest first, capped at _HISTORY_MAX)."""
@@ -381,7 +382,7 @@ def _tab_search(config: PipelineConfig) -> None:
 def _check_tesseract() -> tuple[bool, str]:
     """Return (ok, version_or_error_message)."""
     try:
-        import pytesseract  # noqa: PLC0415
+        import pytesseract
         version = pytesseract.get_tesseract_version()
         return True, str(version)
     except Exception as exc:

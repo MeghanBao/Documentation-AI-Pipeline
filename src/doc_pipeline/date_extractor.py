@@ -10,7 +10,6 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,16 +37,16 @@ _RE_MONTH_NAME_ONLY = re.compile(                                  # name + year
 # --- Labeled fields with score weights (Stage 1 + 2) ---
 # Higher score = higher confidence that this is the authoritative document date.
 _LABELED_FIELDS: list[tuple[re.Pattern[str], int]] = [
-    (re.compile(r"rechnungsdatum\s*[:=]?\s*",    re.I), 100),
-    (re.compile(r"ausstellungsdatum\s*[:=]?\s*", re.I),  90),
-    (re.compile(r"bescheiddatum\s*[:=]?\s*",     re.I),  90),
-    (re.compile(r"vertragsdatum\s*[:=]?\s*",     re.I),  85),
-    (re.compile(r"schreiben\s+vom\s*[:=]?\s*",   re.I),  80),
-    (re.compile(r"(?<!\w)datum\s*[:=]?\s*",      re.I),  70),
-    (re.compile(r"abrechnungsmonat\s*[:=]?\s*",  re.I),  65),
-    (re.compile(r"fälligkeitsdatum\s*[:=]?\s*",  re.I),  30),
-    (re.compile(r"fällig\s+am\s*[:=]?\s*",       re.I),  30),
-    (re.compile(r"geburtsdatum\s*[:=]?\s*",      re.I),  10),
+    (re.compile(r"rechnungsdatum\s*[:=]?\s*",    re.IGNORECASE), 100),
+    (re.compile(r"ausstellungsdatum\s*[:=]?\s*", re.IGNORECASE),  90),
+    (re.compile(r"bescheiddatum\s*[:=]?\s*",     re.IGNORECASE),  90),
+    (re.compile(r"vertragsdatum\s*[:=]?\s*",     re.IGNORECASE),  85),
+    (re.compile(r"schreiben\s+vom\s*[:=]?\s*",   re.IGNORECASE),  80),
+    (re.compile(r"(?<!\w)datum\s*[:=]?\s*",      re.IGNORECASE),  70),
+    (re.compile(r"abrechnungsmonat\s*[:=]?\s*",  re.IGNORECASE),  65),
+    (re.compile(r"fälligkeitsdatum\s*[:=]?\s*",  re.IGNORECASE),  30),
+    (re.compile(r"fällig\s+am\s*[:=]?\s*",       re.IGNORECASE),  30),
+    (re.compile(r"geburtsdatum\s*[:=]?\s*",      re.IGNORECASE),  10),
 ]
 
 # Score assigned to every date found during the generic full-text scan (Stage 3)
@@ -61,7 +60,7 @@ class DateResult:
     month_only: bool = False
 
 
-def extract_date(text: str, min_score: int = 30) -> Optional[DateResult]:
+def extract_date(text: str, min_score: int = 30) -> DateResult | None:
     """
     Return the most confident DateResult found in *text*, or None.
 
@@ -123,7 +122,7 @@ def extract_date(text: str, min_score: int = 30) -> Optional[DateResult]:
     return best
 
 
-def _first_date_in(text: str, base_score: int) -> Optional[DateResult]:
+def _first_date_in(text: str, base_score: int) -> DateResult | None:
     """Parse the first recognizable date format from a short snippet."""
     checks: list[tuple[re.Pattern[str], object]] = [
         (_RE_DMY_DOT,    lambda m: _to_date(int(m[1]), int(m[2]), int(m[3]))),
@@ -157,7 +156,7 @@ def _first_date_in(text: str, base_score: int) -> Optional[DateResult]:
     return None
 
 
-def _to_date(day: int, month: int, year: int) -> Optional[date]:
+def _to_date(day: int, month: int, year: int) -> date | None:
     try:
         return date(year, month, day)
     except ValueError:

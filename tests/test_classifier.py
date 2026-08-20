@@ -145,3 +145,11 @@ class TestCaseInsensitivity:
     def test_mixed_case_keywords(self):
         result = classify("VeRsIcHeRuNg Police 12345")
         assert result.doc_type == "Versicherung"
+
+
+def test_classify_records_matched_keyword():
+    """Provenance: the classifier reports which type keyword triggered the match."""
+    assert classify("Rechnung Nr. 1234").matched_keyword == "rechnung"
+    assert classify("Bruttogehalt: 3500 EUR").matched_keyword == "bruttogehalt"
+    # No type match → no keyword
+    assert classify("Lorem ipsum dolor").matched_keyword == ""

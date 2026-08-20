@@ -142,7 +142,7 @@ def _run_tesseract(img: Image.Image, lang: str) -> str:
 
 def _load_paddleocr(paddle_lang: str) -> object:
     """Instantiate a PaddleOCR object. Raises ImportError if not installed."""
-    from paddleocr import PaddleOCR  # noqa: PLC0415
+    from paddleocr import PaddleOCR
     return PaddleOCR(lang=paddle_lang, use_angle_cls=True, use_gpu=False, show_log=False)
 
 
@@ -164,7 +164,7 @@ def _run_paddleocr(img: Image.Image, lang: str) -> str:
     - Any runtime error occurs (logged as warning, not re-raised)
     """
     try:
-        import numpy as np  # noqa: PLC0415
+        import numpy as np
 
         ocr = _get_paddleocr(lang)
         arr = np.array(img)

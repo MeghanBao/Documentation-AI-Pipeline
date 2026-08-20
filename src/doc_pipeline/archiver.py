@@ -3,7 +3,6 @@ import logging
 import re
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from .classifier import Classification
 from .date_extractor import DateResult
@@ -16,7 +15,7 @@ _MAX_PATH = 259
 
 def build_filename(
     classification: Classification,
-    date_result: Optional[DateResult],
+    date_result: DateResult | None,
     original_stem: str,
 ) -> tuple[str, bool]:
     """
@@ -42,7 +41,7 @@ def build_filename(
 def archive_document(
     src_path: Path,
     classification: Classification,
-    date_result: Optional[DateResult],
+    date_result: DateResult | None,
     archive_base: Path,
     review_dir: Path,
     review_reason: str = "",

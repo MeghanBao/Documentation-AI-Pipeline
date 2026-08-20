@@ -9,6 +9,7 @@ class Classification:
     archive_subdir: str # e.g. "Rechnungen"
     thema: str          # e.g. "Strom"
     confident: bool     # False → document goes to review/
+    matched_keyword: str = ""  # the type keyword that triggered this (for provenance)
 
 
 # (doc_type, archive_subdir, keyword_list)
@@ -75,10 +76,13 @@ def classify(text: str, fallback_stem: str = "Dokument") -> Classification:
 
     matched_type: str | None = None
     matched_subdir: str | None = None
+    matched_kw: str | None = None
     for doc_type, archive_subdir, keywords in _TYPE_RULES:
-        if any(kw in lower for kw in keywords):
+        hit = next((kw for kw in keywords if kw in lower), None)
+        if hit is not None:
             matched_type = doc_type
             matched_subdir = archive_subdir
+            matched_kw = hit
             break
 
     if matched_type is None:
@@ -100,6 +104,7 @@ def classify(text: str, fallback_stem: str = "Dokument") -> Classification:
         archive_subdir=matched_subdir,
         thema=thema or _sanitize(fallback_stem),
         confident=True,
+        matched_keyword=matched_kw or "",
     )
 
 

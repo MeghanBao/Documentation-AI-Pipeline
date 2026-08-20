@@ -27,3 +27,14 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+# Explicit rule set so a newer ruff can't add surprise rules and break CI.
+# Core correctness (E/F), import order (I), and modernization (UP).
+# Opinionated style rules (blind-except BLE001, try-except-pass S110,
+# naive-datetime DTZ005) are intentionally off: this local I/O pipeline
+# deliberately swallows non-fatal errors and uses naive timestamps in the UI.
+select = ["E4", "E7", "E9", "F", "I", "UP"]

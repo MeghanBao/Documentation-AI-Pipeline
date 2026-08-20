@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def _create_client(persist_dir: Path | None):
     """Create a ChromaDB client. Separate function for testability."""
-    import chromadb  # noqa: PLC0415
+    import chromadb
 
     if persist_dir is None:
         return chromadb.EphemeralClient()

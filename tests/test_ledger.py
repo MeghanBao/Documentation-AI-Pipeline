@@ -15,7 +15,7 @@ def _archive_file(config, subdir: str, name: str) -> Path:
 
 def _record(config, dest: Path, *, confident=True, score=65, date_str="2025-02", reason=""):
     cls = Classification(doc_type="Lohnabrechnung", archive_subdir="Arbeit",
-                         thema="Gehalt", confident=confident)
+                         thema="Gehalt", confident=confident, matched_keyword="bruttogehalt")
     dr = DateResult(date_str=date_str, score=score, month_only=True) if date_str else None
     return ledger.record_archive(
         config, original_name="scan_001.pdf", original_src=config.input_manual / "scan_001.pdf",

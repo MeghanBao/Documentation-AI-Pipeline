@@ -9,21 +9,21 @@ if TYPE_CHECKING:
 _DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
-def _load_model(model_name: str) -> "SentenceTransformer":
+def _load_model(model_name: str) -> SentenceTransformer:
     """Load (or retrieve from cache) a SentenceTransformer model.
 
     Kept as a separate function so tests can patch it without importing
     sentence_transformers at module level.
     """
-    from sentence_transformers import SentenceTransformer  # noqa: PLC0415
+    from sentence_transformers import SentenceTransformer
 
     return SentenceTransformer(model_name)
 
 
-_model_cache: dict[str, "SentenceTransformer"] = {}
+_model_cache: dict[str, SentenceTransformer] = {}
 
 
-def get_model(model_name: str = _DEFAULT_MODEL) -> "SentenceTransformer":
+def get_model(model_name: str = _DEFAULT_MODEL) -> SentenceTransformer:
     """Return a cached SentenceTransformer instance."""
     if model_name not in _model_cache:
         _model_cache[model_name] = _load_model(model_name)

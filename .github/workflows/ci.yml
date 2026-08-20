@@ -39,7 +39,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -e .
-          pip install pytest ruff reportlab
+          pip install pytest "ruff==0.16.3" reportlab
           pip install sentence-transformers>=2.7 "chromadb>=0.5"
 
       - name: Lint — ruff check src/

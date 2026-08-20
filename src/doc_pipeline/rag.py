@@ -41,7 +41,7 @@ class RAGEngine:
         cls,
         persist_dir: Path,
         model_name: str = _DEFAULT_MODEL,
-    ) -> "RAGEngine":
+    ) -> RAGEngine:
         """Create a persistent :class:`RAGEngine` backed by *persist_dir*."""
         store = VectorStore(persist_dir=persist_dir)
         return cls(store=store, model_name=model_name)

@@ -4,7 +4,6 @@ import shutil
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from .archiver import archive_document
 from .classifier import classify
@@ -20,7 +19,7 @@ _rag_cache: dict[str, object] = {}
 
 def _rag_engine(config: PipelineConfig):
     """Return a cached RAGEngine for *config* (lazy init)."""
-    from .rag import RAGEngine  # noqa: PLC0415 — optional dependency
+    from .rag import RAGEngine
 
     key = str(config.rag_db)
     if key not in _rag_cache:
@@ -52,7 +51,7 @@ def _maybe_index_rag(
         logger.warning("RAG indexing failed for %s: %s", dest.name, exc)
 
 
-def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
+def process_document(file_path: Path, config: PipelineConfig) -> Path | None:
     """
     Process a single document through the full pipeline.
 
@@ -131,7 +130,7 @@ def process_document(file_path: Path, config: PipelineConfig) -> Optional[Path]:
     # --- Step 5b: Provenance journal (non-fatal) — enables `why` / `undo` ---
     if getattr(config, "enable_journal", True):
         try:
-            from .ledger import record_archive  # noqa: PLC0415 — keep import light
+            from .ledger import record_archive
 
             record_archive(
                 config,
